@@ -11,7 +11,6 @@ import {
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
-import * as Updates from 'expo-updates';
 import { getBaseUrl } from '@/lib/constants';
 import { loginEmailStorage } from '@/lib/utils';
 
@@ -30,7 +29,7 @@ export default function VerifyEmail() {
 
   const handleReturnToLogin = async () => {
     try {
-      await Updates.reloadAsync();
+      router.replace('/(auth)/login');
     } catch (error) {
       // Fallback to router if Updates fails
       router.replace('/');
@@ -88,10 +87,7 @@ export default function VerifyEmail() {
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleReturnToLogin}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleReturnToLogin}>
         <Text style={styles.buttonText}>Return to Login</Text>
       </TouchableOpacity>
 

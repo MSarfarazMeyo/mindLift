@@ -1,0 +1,56 @@
+export const GAME_CONFIG = {
+  PLAYER_SIZE: 50,
+  PLAYER_SPEED: 8,
+  BULLET_SIZE: 8,
+  BULLET_SPEED: 12,
+  ENEMY_SIZES: {
+    SMALL: 30,
+    MEDIUM: 45,
+    LARGE: 60,
+    BOSS: 90,
+  },
+  ENEMY_SPEEDS: {
+    SMALL: 4,
+    MEDIUM: 2.5,
+    LARGE: 1.5,
+    BOSS: 1,
+  },
+  POWERUP_SIZE: 35,
+  POWERUP_SPEED: 2,
+  FIRE_RATE: 200,
+  RAPID_FIRE_RATE: 80,
+  POWERUP_DURATION: 5000,
+  WAVE_ENEMY_COUNT_BASE: 5,
+  WAVE_DELAY: 2000,
+  ENEMY_FIRE_RATE: 2000,
+  ENEMY_LASER_SPEED: 6,
+  ENEMY_LASER_SIZE: 6,
+  STAR_COUNT: 100,
+  COMBO_TIMEOUT: 3000,
+} as const;
+
+export const COLORS = {
+  BACKGROUND: '#0a0e27',
+  PLAYER: '#00d9ff',
+  PLAYER_GLOW: '#00ffff',
+  BULLET: '#ffff00',
+  ENEMY_SMALL: '#ff3366',
+  ENEMY_MEDIUM: '#ff6b35',
+  ENEMY_LARGE: '#ff9500',
+  ENEMY_BOSS: '#ff0055',
+  POWERUP_RAPID: '#ffcc00',
+  POWERUP_SHIELD: '#00ff88',
+  POWERUP_HEALTH: '#ff66ff',
+  POWERUP_SPREAD: '#ff8800',
+  SHIELD: '#00ff88',
+  ENEMY_LASER: '#ff0066',
+  STAR: '#ffffff',
+  PARTICLE: '#ffffff',
+  UI_TEXT: '#ffffff',
+  UI_BAR_BG: '#1a1f3a',
+  UI_HEALTH: '#ff3366',
+  UI_SHIELD: '#00ff88',
+} as const;
+
+export type EnemyType = 'SMALL' | 'MEDIUM' | 'LARGE' | 'BOSS';
+export type PowerUpType = 'RAPID_FIRE' | 'SHIELD' | 'HEALTH' | 'SPREAD_SHOT';

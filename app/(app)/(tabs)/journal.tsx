@@ -9,23 +9,33 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '../../../lib/store';
 import { useLocalSearchParams } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { showError, showInfo, showSuccess } from '@/lib/toastMessage';
 import JournalTab from '@/components/journalTab/JournalTab';
 import QuestionsTab from '@/components/journalTab/QuestionsTab';
-import GoalsTab, { DAILY_GOALS } from '@/components/journalTab/GoalsTab';
+import GoalsTab from '@/components/journalTab/GoalsTab';
 import WeeklyReportTab, { ratings } from '@/components/EnhancedWeeklyReport';
+import AddGoalScreen from '@/components/journalTab/AddGoal';
+import { useGoals } from '@/contexts/GoalsContext';
 const screenWidth = Dimensions.get('window').width;
 
 type Rating = 'Poor' | 'Fair' | 'Neutral' | 'Very Good' | 'Excellent';
 
 export default function JournalScreen() {
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const [activeTab, setActiveTab] = useState<string>(
     (params.tab as string) || 'journal',
   );
+
+  const { goals, totalPoints } = useGoals();
+
+  console.log('goals', goals);
+  console.log('totalPoints', totalPoints);
+
   const [journalEntry, setJournalEntry] = useState<string>('');
   const [mood, setMood] = useState<string>('');
   const [sleep, setSleep] = useState<string>('');
@@ -103,51 +113,51 @@ export default function JournalScreen() {
     }));
   };
 
-  const handleGoalComplete = async (goalId: string) => {
-    try {
-      setLoding(true);
-      if (completedGoals.includes(goalId)) {
-        showInfo(
-          'Already Completed',
-          'You have already completed this goal today!',
-        );
-        return;
-      }
+  // const handleGoalComplete = async (goalId: string) => {
+  //   try {
+  //     setLoding(true);
+  //     if (completedGoals.includes(goalId)) {
+  //       showInfo(
+  //         'Already Completed',
+  //         'You have already completed this goal today!',
+  //       );
+  //       return;
+  //     }
 
-      const goal = DAILY_GOALS.find((g) => g.id === goalId);
-      if (!goal) return;
+  //     const goal = DAILY_GOALS.find((g) => g.id === goalId);
+  //     if (!goal) return;
 
-      const newCompletedGoals = [...completedGoals, goalId];
-      setCompletedGoals(newCompletedGoals);
-      // Check if all goals are completed
-      if (newCompletedGoals.length === DAILY_GOALS.length) {
-        // Save goal completion to journal entries for tracking
-        const goalEntry = {
-          id: Crypto.randomUUID(),
-          date: new Date().toISOString(),
-          mood: '',
-          sleep: '',
-          activities: '',
-          notes: `Goal completed: ${goal.title} - ${goal.description} (+${goal.points} points)`,
-        };
+  //     const newCompletedGoals = [...completedGoals, goalId];
+  //     setCompletedGoals(newCompletedGoals);
+  //     // Check if all goals are completed
+  //     if (newCompletedGoals.length === DAILY_GOALS.length) {
+  //       // Save goal completion to journal entries for tracking
+  //       const goalEntry = {
+  //         id: Crypto.randomUUID(),
+  //         date: new Date().toISOString(),
+  //         mood: '',
+  //         sleep: '',
+  //         activities: '',
+  //         notes: `Goal completed: ${goal.title} - ${goal.description} (+${goal.points} points)`,
+  //       };
 
-        showPointsNotification(30 * newCompletedGoals.length);
-        setActiveTab('report');
+  //       showPointsNotification(30 * newCompletedGoals.length);
+  //       setActiveTab('report');
 
-        await addJournalAndAchievementEntry(
-          'goals',
-          goalEntry,
-          newCompletedGoals.length * 30,
-          newCompletedGoals.length,
-        );
-      } else {
-        showSuccess('Goal Completed', 'You have earned 30n points!');
-      }
-    } catch (error) {
-    } finally {
-      setLoding(false);
-    }
-  };
+  //       await addJournalAndAchievementEntry(
+  //         'goals',
+  //         goalEntry,
+  //         newCompletedGoals.length * 30,
+  //         newCompletedGoals.length,
+  //       );
+  //     } else {
+  //       showSuccess('Goal Completed', 'You have earned 30n points!');
+  //     }
+  //   } catch (error) {
+  //   } finally {
+  //     setLoding(false);
+  //   }
+  // };
 
   const handleSubmitResponses = async () => {
     if (Object.keys(questionResponses).length < questions.length) {
@@ -191,7 +201,10 @@ export default function JournalScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, { paddingTop: insets.top }]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Journal & Check-in</Text>
         <Text style={styles.subtitle}>Track your journey to wellness</Text>
@@ -233,7 +246,7 @@ export default function JournalScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* <TouchableOpacity
+        <TouchableOpacity
           style={[styles.tab, activeTab === 'goals' && styles.activeTab]}
           onPress={() => setActiveTab('goals')}
         >
@@ -243,9 +256,9 @@ export default function JournalScreen() {
               activeTab === 'goals' && styles.activeTabText,
             ]}
           >
-            Goals
+            My goals
           </Text>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, activeTab === 'report' && styles.activeTab]}
@@ -285,11 +298,9 @@ export default function JournalScreen() {
           loading={loading}
         />
       ) : activeTab === 'goals' ? (
-        <GoalsTab
-          completedGoals={completedGoals}
-          handleGoalComplete={handleGoalComplete}
-          loading={loading}
-        />
+        <GoalsTab setActiveTab={setActiveTab} />
+      ) : activeTab === 'add-goal' ? (
+        <AddGoalScreen setActiveTab={setActiveTab} />
       ) : (
         <WeeklyReportTab />
       )}

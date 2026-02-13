@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '@/lib/store';
 import { RankCard } from '@/components/RankCard';
 import { StatsContainer } from '@/components/StatsContainer';
@@ -17,16 +18,15 @@ import { RanksList } from '@/components/RanksList';
 import { Leaderboard } from '@/components/Leaderboard';
 
 export default function AchievementsScreen() {
+  const insets = useSafeAreaInsets();
   const store = useStore();
-  const { achievement, resetAchievements } = useStore()
+  const { achievement, resetAchievements } = useStore();
 
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
 
   const currentRank = store.getRank();
   const nextRank = store.getNextRank();
   const userProfile = useStore((state) => state.userProfile);
-
-
 
   if (!achievement) {
     return (
@@ -37,7 +37,10 @@ export default function AchievementsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, { paddingTop: insets.top }]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Achievements</Text>
         <Text style={styles.subtitle}>Track your progress</Text>

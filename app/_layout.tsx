@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,6 +17,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PetProvider } from '@/contexts/PetContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { LeaderboardProvider } from '@/contexts/LeaderboardContext';
+import { GoalsProvider } from '@/contexts/GoalsContext';
+import { scheduleDailyReminder, scheduleWeeklyReport } from '@/lib/notifications';
 
 if (__DEV__) {
   require('../ReactotronConfig');
@@ -70,6 +72,11 @@ export default function RootLayout() {
         console.log(response);
       });
 
+    // Restore scheduled notifications on app startup
+    if (Platform.OS !== 'web') {
+      restoreNotifications();
+    }
+
     return () => {
       notificationListener.current &&
         Notifications.removeNotificationSubscription(
@@ -79,6 +86,25 @@ export default function RootLayout() {
         Notifications.removeNotificationSubscription(responseListener.current);
     };
   }, []);
+
+  const restoreNotifications = async () => {
+    try {
+      const dailyReminders = await AsyncStorage.getItem('dailyReminders');
+      const weeklyReports = await AsyncStorage.getItem('weeklyReports');
+      const reminderTime = await AsyncStorage.getItem('reminderTime');
+
+      if (dailyReminders === 'true' && reminderTime) {
+        const time = new Date(reminderTime);
+        await scheduleDailyReminder(true, time.getHours(), time.getMinutes());
+      }
+
+      if (weeklyReports === 'true') {
+        await scheduleWeeklyReport(true, 7, 19, 0);
+      }
+    } catch (error) {
+      console.error('Error restoring notifications:', error);
+    }
+  };
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -237,20 +263,25 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <PetProvider>
             <LeaderboardProvider>
-              <GestureHandlerRootView>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen name="(app)" options={{ headerShown: false }} />
-                  <Stack.Screen
-                    name="profile-setup"
-                    options={{ headerShown: false }}
-                  />
-                </Stack>
-                <Toast />
-              </GestureHandlerRootView>
+              <GoalsProvider>
+                <GestureHandlerRootView>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen
+                      name="(auth)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="(app)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="profile-setup"
+                      options={{ headerShown: false }}
+                    />
+                  </Stack>
+                  <Toast />
+                </GestureHandlerRootView>
+              </GoalsProvider>
             </LeaderboardProvider>
           </PetProvider>
         </QueryClientProvider>

@@ -29,8 +29,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Purchases from 'react-native-purchases';
 import SubscriptionButton from '@/components/SubscriptionButton';
 import { firstLoginStorage, loginEmailStorage } from '@/lib/utils';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [dailyReminders, setDailyReminders] = useState(true);
   const [weeklyReports, setWeeklyReports] = useState(true);
@@ -51,11 +53,34 @@ export default function SettingsScreen() {
 
     const loadReminderTime = async () => {
       const savedTime = await AsyncStorage.getItem('reminderTime');
-      if (savedTime) setReminderTime(new Date(savedTime));
+      if (savedTime) {
+        setReminderTime(new Date(savedTime));
+      } else {
+        const defaultTime = new Date();
+        defaultTime.setHours(10, 0, 0, 0);
+        setReminderTime(defaultTime);
+      }
+    };
+
+    const loadSettings = async () => {
+      const savedDailyReminders = await AsyncStorage.getItem('dailyReminders');
+      const savedWeeklyReports = await AsyncStorage.getItem('weeklyReports');
+      const savedNotificationsEnabled = await AsyncStorage.getItem('notificationsEnabled');
+      
+      if (savedDailyReminders !== null) {
+        setDailyReminders(savedDailyReminders === 'true');
+      }
+      if (savedWeeklyReports !== null) {
+        setWeeklyReports(savedWeeklyReports === 'true');
+      }
+      if (savedNotificationsEnabled !== null) {
+        setNotificationsEnabled(savedNotificationsEnabled === 'true');
+      }
     };
 
     checkPermissions();
     loadReminderTime();
+    loadSettings();
   }, []);
 
   // Fix for handleNotificationsToggle function
@@ -69,7 +94,7 @@ export default function SettingsScreen() {
       const { status } = await Notifications.requestPermissionsAsync();
       if (status === 'granted') {
         setNotificationsEnabled(true);
-        // Fix: Pass correct parameters to scheduleDailyReminder
+        await AsyncStorage.setItem('notificationsEnabled', 'true');
         if (dailyReminders) {
           await scheduleDailyReminder(
             true,
@@ -77,23 +102,23 @@ export default function SettingsScreen() {
             reminderTime.getMinutes(),
           );
         }
-        // Fix: Pass correct parameters to scheduleWeeklyReport
         if (weeklyReports) {
-          await scheduleWeeklyReport(true, 7, 19, 0); // Sunday at 7 PM
+          await scheduleWeeklyReport(true, 7, 19, 0);
         }
       }
     } else {
       await Notifications.cancelAllScheduledNotificationsAsync();
       setNotificationsEnabled(false);
+      await AsyncStorage.setItem('notificationsEnabled', 'false');
     }
   };
 
   // Fix for handleDailyRemindersToggle function
   const handleDailyRemindersToggle = async (value: boolean) => {
     setDailyReminders(value);
+    await AsyncStorage.setItem('dailyReminders', value.toString());
     if (notificationsEnabled) {
       await Notifications.cancelAllScheduledNotificationsAsync();
-      // Fix: Pass correct parameters
       if (value) {
         await scheduleDailyReminder(
           true,
@@ -102,10 +127,8 @@ export default function SettingsScreen() {
         );
       }
       if (weeklyReports) {
-        await scheduleWeeklyReport(true, 7, 19, 0); // Sunday at 7 PM
+        await scheduleWeeklyReport(true, 7, 19, 0);
       }
-    } else {
-      console.log('working');
     }
   };
 
@@ -152,6 +175,7 @@ export default function SettingsScreen() {
   // Fix for handleWeeklyReportsToggle function
   const handleWeeklyReportsToggle = async (value: boolean) => {
     setWeeklyReports(value);
+    await AsyncStorage.setItem('weeklyReports', value.toString());
     if (notificationsEnabled) {
       await Notifications.cancelAllScheduledNotificationsAsync();
       if (dailyReminders) {
@@ -161,9 +185,8 @@ export default function SettingsScreen() {
           reminderTime.getMinutes(),
         );
       }
-      // Fix: Pass correct parameters
       if (value) {
-        await scheduleWeeklyReport(true, 7, 19, 0); // Sunday at 7 PM
+        await scheduleWeeklyReport(true, 7, 19, 0);
       }
     }
   };
@@ -336,7 +359,10 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={{ ...styles.container, paddingTop: insets.top }}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Settings</Text>
         <Text style={styles.subtitle}>Customize your experience</Text>

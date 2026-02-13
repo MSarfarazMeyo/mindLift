@@ -35,8 +35,7 @@ export default function SignUp() {
   const [age, setAge] = useState('');
   const [goals, setGoals] = useState<string[]>([]);
 
-  const [pushToken, setPushToken] = useState<any>(null)
-
+  const [pushToken, setPushToken] = useState<any>(null);
 
   const resetStore = useStore((state) => state.reset);
 
@@ -50,11 +49,10 @@ export default function SignUp() {
     'Develop Healthy Habits',
   ];
 
-
   useEffect(() => {
     registerForPushNotificationsAsync()
-      .then(token => setPushToken(token ?? ''))
-      .catch((error: any) => console.warn("expo push token error", error));
+      .then((token) => setPushToken(token ?? ''))
+      .catch((error: any) => console.warn('expo push token error', error));
   }, []);
 
   const toggleGoal = (goal: string) => {
@@ -105,49 +103,28 @@ export default function SignUp() {
     setStep(1);
   };
 
-
-
-
-
-
   const handleSignUp = async () => {
     if (!validateStep2()) return;
 
     try {
       setLoading(true);
       setError('');
-      resetStore();
 
-      const {
-        data: { session },
-        error: signUpError,
-      } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${getBaseUrl()}/verify-email`,
-          data: {
-            name,
-            username,
-            age: age || null,
-            goals: goals.length > 0 ? goals : null,
-          },
-        },
-      });
+      await AsyncStorage.setItem(
+        'signup_data',
+        JSON.stringify({
+          email,
+          password,
+          name,
+          username,
+          age: age || null,
+          goals: goals.length > 0 ? goals : null,
+        }),
+      );
 
-      if (signUpError) {
-        throw new Error(
-          signUpError.message || 'Failed to sign up. Please try again.',
-        );
-      }
-
-      await firstLoginStorage('set', true)
-      await loginEmailStorage('set', email)
-
-      router.push('/verify-email')
-
+      router.push('/(auth)/questions');
     } catch (e: any) {
-      setError(e.message || 'An error occurred during sign up');
+      setError(e.message || 'An error occurred');
       Alert.alert(
         'Error',
         e.message || 'Something went wrong. Please try again.',
@@ -361,7 +338,7 @@ export default function SignUp() {
           accessibilityLabel="Create account button"
         >
           <Text style={styles.buttonText}>
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Please wait...' : 'Next'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -420,6 +397,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingTop: 12,
   },
   header: {
     padding: 20,

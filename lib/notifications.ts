@@ -30,12 +30,8 @@ export async function registerForPushNotificationsAsync() {
       alert('Failed to get push token for push notification!');
       return;
     }
-    // Learn more about projectId:
-    // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
-    // EAS projectId is used here.
     try {
       const projectId = '59cbd475-fb93-4266-88af-48210b8b4a08'
-      // Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
       if (!projectId) {
         throw new Error('Project ID not found');
       }
@@ -88,7 +84,6 @@ export async function sendPushNotification({
 
 export async function scheduleDailyReminder(enabled = true, hour = 10, minute = 0) {
   try {
-    // Cancel existing daily reminder
     await Notifications.cancelScheduledNotificationAsync(DAILY_REMINDER_ID);
 
     if (!enabled) {
@@ -96,12 +91,21 @@ export async function scheduleDailyReminder(enabled = true, hour = 10, minute = 
       return;
     }
 
-    // Schedule new daily reminder
+    const now = new Date();
+    const scheduledTime = new Date();
+    scheduledTime.setHours(hour, minute, 0, 0);
+
+    if (scheduledTime <= now) {
+      scheduledTime.setDate(scheduledTime.getDate() + 1);
+    }
+
+    const secondsUntilTrigger = Math.floor((scheduledTime.getTime() - now.getTime()) / 1000);
+
     await Notifications.scheduleNotificationAsync({
       identifier: DAILY_REMINDER_ID,
       content: {
         title: "Don't forget to check in!",
-        body: "Take a moment for your wellness today 💆‍♀️",
+        body: "Take a moment for your wellness today 💆♀️",
         sound: 'default',
         data: {
           type: 'daily_reminder',
@@ -109,13 +113,12 @@ export async function scheduleDailyReminder(enabled = true, hour = 10, minute = 
         },
       },
       trigger: {
-        hour,
-        minute,
-        repeats: true,
-      } as any,
+        seconds: secondsUntilTrigger,
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      },
     });
 
-    console.log(`Daily reminder scheduled for ${hour}:${minute.toString().padStart(2, '0')}`);
+    console.log(`Daily reminder scheduled for ${scheduledTime.toLocaleString()}`);
   } catch (error) {
     console.error('Error scheduling daily reminder:', error);
     throw error;
@@ -125,7 +128,6 @@ export async function scheduleDailyReminder(enabled = true, hour = 10, minute = 
 
 export async function scheduleWeeklyReport(enabled = true, weekday = 7, hour = 19, minute = 0) {
   try {
-    // Cancel existing weekly report
     await Notifications.cancelScheduledNotificationAsync(WEEKLY_REPORT_ID);
 
     if (!enabled) {
@@ -133,12 +135,11 @@ export async function scheduleWeeklyReport(enabled = true, weekday = 7, hour = 1
       return;
     }
 
-    // Schedule new weekly report
     await Notifications.scheduleNotificationAsync({
       identifier: WEEKLY_REPORT_ID,
       content: {
         title: "Your Weekly Wellness Report",
-        body: "Tap to review how your week went 🧘‍♂️",
+        body: "Tap to review how your week went 🧘♂️",
         sound: 'default',
         data: {
           type: 'weekly_report',
@@ -161,9 +162,6 @@ export async function scheduleWeeklyReport(enabled = true, weekday = 7, hour = 1
   }
 }
 
-/**
- * Cancel all scheduled notifications
- */
 export async function cancelAllNotifications() {
   try {
     await Notifications.cancelScheduledNotificationAsync(DAILY_REMINDER_ID);
@@ -175,10 +173,6 @@ export async function cancelAllNotifications() {
   }
 }
 
-/**
- * Get status of scheduled notifications
- * @returns {Promise<{dailyEnabled: boolean, weeklyEnabled: boolean}>}
- */
 export async function getNotificationStatus() {
   try {
     const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();

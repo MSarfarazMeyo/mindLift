@@ -23,6 +23,10 @@ export default function GamesLayout() {
       <Stack.Screen name="endlessrunner" options={{ headerShown: false }} />
       <Stack.Screen name="colormatch" options={{ headerShown: false }} />
       <Stack.Screen name="birdybounce" options={{ headerShown: false }} />
+      <Stack.Screen name="pacman" options={{ headerShown: false }} />
+      <Stack.Screen name="connectfour" options={{ headerShown: false }} />
+      <Stack.Screen name="snake" options={{ headerShown: false }} />
+      <Stack.Screen name="shooting" options={{ headerShown: false }} />
     </Stack>
   );
 }

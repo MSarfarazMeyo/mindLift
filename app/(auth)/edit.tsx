@@ -102,6 +102,10 @@ const EditProfile = () => {
 
   const uploadImageToSupabase = async (imageUri: any) => {
     try {
+      if (!imageUri) {
+        throw new Error('No image URI provided');
+      }
+      
       const fileExt = imageUri.split('.').pop();
       const fileName = `profile_${Date.now()}.${fileExt}`;
       const fileType = `image/${fileExt}`;
@@ -155,8 +159,8 @@ const EditProfile = () => {
       }
 
       let imageUrl = profileImage.uri;
-      if (!imageUrl.startsWith('http')) {
-        imageUrl = await uploadImageToSupabase(profileImage.uri);
+      if (imageUrl && !imageUrl.startsWith('http')) {
+        imageUrl = await uploadImageToSupabase(imageUrl);
         if (!imageUrl) {
           setLoading(false);
           return;

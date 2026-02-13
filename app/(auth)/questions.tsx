@@ -1,12 +1,18 @@
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../../lib/supabase';
+import { getBaseUrl } from '../../lib/constants';
+import { useStore } from '../../lib/store';
+import { firstLoginStorage, loginEmailStorage } from '@/lib/utils';
 
 const Questions = () => {
   const [error, setError] = useState('');
@@ -14,12 +20,21 @@ const Questions = () => {
   const [showErrors, setShowErrors] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [signupData, setSignupData] = useState<any>(null);
+
+  const resetStore = useStore((state) => state.reset);
+
+  useEffect(() => {
+    AsyncStorage.getItem('signup_data').then((data) => {
+      if (data) setSignupData(JSON.parse(data));
+    });
+  }, []);
 
   const handleResponse = (questionId: number, response: string) => {
     setResponses((prev) => ({ ...prev, [questionId]: response }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!responses[questions[currentQuestionIndex].id]) {
       setError('Please answer the question before proceeding.');
       setShowErrors(true);
@@ -30,7 +45,46 @@ const Questions = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
+      await handleSignUp();
+    }
+  };
+
+  const handleSignUp = async () => {
+    if (!signupData) return;
+
+    try {
+      setLoading(true);
+      resetStore();
+
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: signupData.email,
+        password: signupData.password,
+        options: {
+          emailRedirectTo: `${getBaseUrl()}/verify-email`,
+          data: {
+            name: signupData.name,
+            username: signupData.username,
+            age: signupData.age,
+            goals: signupData.goals,
+            questions: responses,
+          },
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
+      await loginEmailStorage('set', signupData.email);
+      await AsyncStorage.removeItem('signup_data');
+
       router.push('/(auth)/verify-email');
+    } catch (e: any) {
+      setError(e.message || 'Signup failed');
+      Alert.alert(
+        'Error',
+        e.message || 'Something went wrong. Please try again.',
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,7 +184,7 @@ const Questions = () => {
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Save'}
+            {loading ? 'Creating Account...' : currentQuestionIndex < questions.length - 1 ? 'Next' : 'Create Account'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -170,6 +224,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
+    paddingTop: 60,
   },
   progressBarContainer: {
     height: 10,

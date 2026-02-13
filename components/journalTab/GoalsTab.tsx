@@ -1,339 +1,509 @@
+import React, { useCallback, useRef, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Animated,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Dimensions,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import * as Haptics from 'expo-haptics';
+import { Plus, RotateCcw, Trash2, Flame, Star } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { useGoals } from '@/contexts/GoalsContext';
+import { goalTrackerColors } from '@/constants/colors';
+import { Goal } from '@/types/goal';
+const Colors = goalTrackerColors;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+function GoalCard({
+  goal,
+  onToggle,
+  onDelete,
+  isToggling,
+  isDeleting,
+}: {
+  goal: Goal;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+  isToggling: boolean;
+  isDeleting: boolean;
+}) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const checkAnim = useRef(new Animated.Value(goal.completed ? 1 : 0)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
 
-// GoalsTab.tsx
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { VictoryPie } from "victory-native";
-import { useStore } from "@/lib/store";
+  useEffect(() => {
+    Animated.timing(checkAnim, {
+      toValue: goal.completed ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [goal.completed, checkAnim]);
 
-export const DAILY_GOALS: any[] = [
-    {
-        id: 'meditation',
-        title: 'Practice Meditation',
-        description: 'Take 10 minutes to meditate',
-        icon: 'leaf',
-        points: 30,
-    },
-    {
-        id: 'exercise',
-        title: 'Physical Exercise',
-        description: '30 minutes of any physical activity',
-        icon: 'fitness',
-        points: 30,
-    },
-    {
-        id: 'gratitude',
-        title: 'Express Gratitude',
-        description: 'Write down 3 things you are grateful for',
-        icon: 'heart',
-        points: 30,
-    },
-    {
-        id: 'water',
-        title: 'Stay Hydrated',
-        description: 'Drink 8 glasses of water',
-        icon: 'water',
-        points: 30,
-    },
-    {
-        id: 'reading',
-        title: 'Mindful Reading',
-        description: 'Read for 20 minutes',
-        icon: 'book',
-        points: 30,
+  const handlePress = useCallback(() => {
+    if (isToggling) return;
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-];
-interface GoalsTabProps {
-    completedGoals: (string | number)[];
-    handleGoalComplete: any;
-    loading: boolean
+    onToggle(goal.id);
+  }, [goal.id, onToggle, scaleAnim, isToggling]);
+
+  const handleDelete = useCallback(() => {
+    Animated.timing(slideAnim, {
+      toValue: -SCREEN_WIDTH,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      onDelete(goal.id);
+    });
+  }, [goal.id, onDelete, slideAnim]);
+
+  const handleLongPress = useCallback(() => {
+    if (isDeleting) return;
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    Alert.alert('Delete Goal', `Remove "${goal.title}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: handleDelete },
+    ]);
+  }, [goal.title, handleDelete, isDeleting]);
+
+  const opacity = checkAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.5],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.goalCard,
+        {
+          transform: [{ scale: scaleAnim }, { translateX: slideAnim }],
+          opacity,
+        },
+      ]}
+    >
+      <TouchableOpacity
+        onPress={handlePress}
+        onLongPress={handleLongPress}
+        activeOpacity={0.8}
+        style={styles.goalCardInner}
+        testID={`goal-card-${goal.id}`}
+        disabled={isToggling || isDeleting}
+      >
+        <View style={styles.goalLeft}>
+          <View
+            style={[
+              styles.checkbox,
+              goal.completed && styles.checkboxCompleted,
+            ]}
+          >
+            {isToggling ? (
+              <ActivityIndicator size="small" color={goal.completed ? "#fff" : Colors.gold} />
+            ) : (
+              goal.completed && <Text style={styles.checkmark}>✓</Text>
+            )}
+          </View>
+          <Text style={styles.goalEmoji}>{goal.emoji}</Text>
+          <Text
+            style={[
+              styles.goalTitle,
+              goal.completed && styles.goalTitleCompleted,
+            ]}
+            numberOfLines={1}
+          >
+            {goal.title}
+          </Text>
+        </View>
+        <View style={styles.goalRight}>
+          {isDeleting ? (
+            <ActivityIndicator size="small" color={Colors.gold} />
+          ) : (
+            <>
+              <Star size={14} color={Colors.gold} fill={Colors.gold} />
+              <Text style={styles.goalPoints}>+{goal.points}</Text>
+            </>
+          )}
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
 }
 
-const GoalsTab: React.FC<GoalsTabProps> = ({
-    completedGoals,
-    handleGoalComplete,
-    loading
-}) => {
+const MemoizedGoalCard = React.memo(GoalCard);
 
+export default function GoalsScreen({
+  setActiveTab,
+}: {
+  setActiveTab: (tab: string) => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { goals, totalPoints, toggleGoal, deleteGoal, resetDaily, isLoading, togglingId, deletingId, isResetting } =
+    useGoals();
+  const [pointsAnim] = useState(() => new Animated.Value(0));
+  const fabScale = useRef(new Animated.Value(1)).current;
 
-    const {
-        canDoJournalAction,
-    } = useStore();
+  const completedCount = goals.filter((g) => g.completed).length;
+  const totalCount = goals.length;
 
-    const completionPercentage =
-        (completedGoals.length / DAILY_GOALS.length) * 100;
+  useEffect(() => {
+    Animated.timing(pointsAnim, {
+      toValue: totalPoints,
+      duration: 400,
+      useNativeDriver: false,
+    }).start();
+  }, [totalPoints, pointsAnim]);
 
+  const handleToggle = useCallback(
+    (id: string) => {
+      toggleGoal(id);
+    },
+    [toggleGoal],
+  );
 
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteGoal(id);
+    },
+    [deleteGoal],
+  );
 
-
-    if (!canDoJournalAction('goals')) {
-        return (
-            <View style={styles.questionsLockedContainer}>
-                <Ionicons name="lock-closed" size={48} color="#95a5a6" />
-                <Text style={styles.questionsLockedTitle}>
-                    Today's goals completed!
-                </Text>
-                <Text style={styles.questionsLockedText}>
-                    Come back tomorrow for a
-                    new set of challenges!
-                </Text>
-            </View>
-        );
-    }
-
-
-    return (
-        <View style={styles.tabContent}>
-
-            {
-                loading && <ActivityIndicator
-                    size="large"
-                    color={'#3498db'}
-                />
+  const handleReset = useCallback(() => {
+    Alert.alert(
+      'Reset Goals',
+      'Mark all goals as incomplete? Your points are kept.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          onPress: () => {
+            if (Platform.OS !== 'web') {
+              Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Success,
+              );
             }
-
-            {/* Progress Chart */}
-            <View style={styles.progressContainer}>
-                <View style={styles.chartContainer}>
-                    <VictoryPie
-                        data={[
-                            { x: "Completed", y: completedGoals.length },
-                            {
-                                x: "Remaining",
-                                y: DAILY_GOALS.length - completedGoals.length,
-                            },
-                        ]}
-                        width={200}
-                        height={200}
-                        colorScale={["#2ecc71", "#ecf0f1"]}
-                        innerRadius={70}
-                        labels={() => null}
-                    />
-                    <View style={styles.progressLabel}>
-                        <Text style={styles.progressPercentage}>
-                            {Math.round(completionPercentage)}%
-                        </Text>
-                        <Text style={styles.progressText}>Complete</Text>
-                    </View>
-                </View>
-            </View>
-
-            {/* Goals List */}
-            <View style={styles.goalsList}>
-                {DAILY_GOALS.map((goal) => (
-                    <View key={goal.id} style={styles.goalCard}>
-                        <View style={styles.goalContent}>
-                            <View
-                                style={[
-                                    styles.goalIcon,
-                                    completedGoals.includes(goal.id) &&
-                                    styles.completedGoalIcon,
-                                ]}
-                            >
-                                <Ionicons
-                                    name={goal.icon as any}
-                                    size={24}
-                                    color={
-                                        completedGoals.includes(goal.id)
-                                            ? "#ffffff"
-                                            : "#3498db"
-                                    }
-                                />
-                            </View>
-                            <View style={styles.goalInfo}>
-                                <Text style={styles.goalTitle}>{goal.title}</Text>
-                                <Text style={styles.goalDescription}>
-                                    {goal.description}
-                                </Text>
-                                <Text style={styles.goalPoints}>
-                                    +{goal.points} points
-                                </Text>
-                            </View>
-                        </View>
-
-                        <TouchableOpacity
-                            style={[
-                                styles.completeButton,
-                                completedGoals.includes(goal.id) &&
-                                styles.completedButton,
-                            ]}
-                            onPress={() => handleGoalComplete(goal.id)}
-                            disabled={completedGoals.includes(goal.id)}
-                        >
-                            {completedGoals.includes(goal.id) ? (
-                                <Ionicons
-                                    name="checkmark-circle"
-                                    size={24}
-                                    color="#ffffff"
-                                />
-                            ) : (
-                                <Text style={styles.completeButtonText}>Complete</Text>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                ))}
-            </View>
-
-            {/* Completion Message */}
-            {completedGoals.length === DAILY_GOALS.length && (
-                <View style={styles.allCompletedContainer}>
-                    <Ionicons name="trophy" size={48} color="#f1c40f" />
-                    <Text style={styles.allCompletedText}>
-                        Congratulations! You've completed all daily goals! 🎉
-                    </Text>
-                </View>
-            )}
-        </View>
+            resetDaily();
+          },
+        },
+      ],
     );
-};
+  }, [resetDaily]);
 
+  const handleAddPress = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(fabScale, {
+        toValue: 0.85,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fabScale, {
+        toValue: 1,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    // router.push("/add-goal");
+    setActiveTab('add-goal');
+  }, [router, fabScale]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: Goal }) => (
+      <MemoizedGoalCard
+        goal={item}
+        onToggle={handleToggle}
+        onDelete={handleDelete}
+        isToggling={togglingId === item.id}
+        isDeleting={deletingId === item.id}
+      />
+    ),
+    [handleToggle, handleDelete, togglingId, deletingId],
+  );
+
+  const keyExtractor = useCallback((item: Goal) => item.id, []);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <StatusBar style="light" />
+        <ActivityIndicator size="large" color={Colors.gold} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar style="light" />
+
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.headerTitle}>My Goals</Text>
+            <Text style={styles.headerSubtitle}>
+              {completedCount}/{totalCount} completed today
+            </Text>
+          </View>
+          {goals.length > 0 && (
+            <TouchableOpacity
+              onPress={handleReset}
+              style={styles.resetButton}
+              testID="reset-button"
+              disabled={isResetting}
+            >
+              {isResetting ? (
+                <ActivityIndicator size="small" color={Colors.textSecondary} />
+              ) : (
+                <RotateCcw size={18} color={Colors.textSecondary} />
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.statsCard}>
+          <View style={styles.pointsRow}>
+            <Flame size={22} color={Colors.gold} />
+            <Text style={styles.pointsText}>{totalPoints}</Text>
+            <Text style={styles.pointsLabel}>pts</Text>
+          </View>
+        </View>
+      </View>
+
+      {goals.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyEmoji}>🎯</Text>
+          <Text style={styles.emptyTitle}>No goals yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Tap the + button to add your first goal
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={goals}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: insets.bottom + 100 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      <Animated.View
+        style={[
+          styles.fab,
+          {
+            bottom: insets.bottom + 24,
+            transform: [{ scale: fabScale }],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={handleAddPress}
+          style={styles.fabButton}
+          activeOpacity={0.8}
+          testID="add-goal-button"
+        >
+          <Plus size={28} color={Colors.background} strokeWidth={3} />
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+    marginTop: 12,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '800' as const,
+    color: Colors.text,
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  resetButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  statsCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 18,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  pointsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pointsText: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    color: Colors.gold,
+  },
+  pointsLabel: {
+    fontSize: 16,
+    color: Colors.goldDark,
+    fontWeight: '600' as const,
+    marginTop: 4,
+  },
 
-    tabContent: {
-        padding: 20,
-    },
-    progressContainer: {
-        alignItems: 'center',
-        marginBottom: 30,
-    },
-    chartContainer: {
-        position: 'relative',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    progressLabel: {
-        position: 'absolute',
-        alignItems: 'center',
-    },
-    progressPercentage: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#2c3e50',
-    },
-    progressText: {
-        fontSize: 14,
-        color: '#7f8c8d',
-    },
-    goalsList: {
-        marginTop: 20,
-    },
-    goalCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 15,
-        padding: 16,
-        marginBottom: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    goalContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    goalIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#ecf0f1',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    completedGoalIcon: {
-        backgroundColor: '#2ecc71',
-    },
-    goalInfo: {
-        flex: 1,
-    },
-    goalTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#2c3e50',
-        marginBottom: 4,
-    },
-    goalDescription: {
-        fontSize: 14,
-        color: '#7f8c8d',
-        marginBottom: 4,
-    },
-    goalPoints: {
-        fontSize: 12,
-        color: '#3498db',
-        fontWeight: 'bold',
-    },
-    completeButton: {
-        backgroundColor: '#3498db',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-        marginLeft: 12,
-    },
-    completedButton: {
-        backgroundColor: '#2ecc71',
-    },
-    completeButtonText: {
-        color: '#ffffff',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    allCompletedContainer: {
-        alignItems: 'center',
-        marginTop: 30,
-        backgroundColor: '#fff8e1',
-        padding: 20,
-        borderRadius: 15,
-    },
-    allCompletedText: {
-        fontSize: 16,
-        color: '#2c3e50',
-        textAlign: 'center',
-        marginTop: 12,
-        fontWeight: 'bold',
-    },
-
-    statusBanner: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#ecf9f1',
-        padding: 12,
-        borderRadius: 12,
-        marginBottom: 20,
-    },
-    statusText: {
-        marginLeft: 8,
-        color: '#27ae60',
-        fontSize: 14,
-        flex: 1,
-        fontWeight: '500',
-    },
-    questionsLockedContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 40,
-        marginTop: 40,
-    },
-    questionsLockedTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#2c3e50',
-        marginTop: 20,
-        marginBottom: 10,
-    },
-    questionsLockedText: {
-        fontSize: 16,
-        color: '#7f8c8d',
-        textAlign: 'center',
-        lineHeight: 24,
-    },
-})
-
-export default GoalsTab;
+  listContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  goalCard: {
+    marginBottom: 10,
+  },
+  goalCardInner: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  goalLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 10,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.textTertiary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxCompleted: {
+    backgroundColor: Colors.green,
+    borderColor: Colors.green,
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  goalEmoji: {
+    fontSize: 20,
+  },
+  goalTitle: {
+    fontSize: 16,
+    color: Colors.text,
+    fontWeight: '500' as const,
+    flex: 1,
+  },
+  goalTitleCompleted: {
+    textDecorationLine: 'line-through' as const,
+    color: Colors.textTertiary,
+  },
+  goalRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 8,
+  },
+  goalPoints: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.gold,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 80,
+  },
+  emptyEmoji: {
+    fontSize: 56,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+  },
+  fab: {
+    position: 'absolute',
+    right: 24,
+  },
+  fabButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.gold,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.gold,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+});

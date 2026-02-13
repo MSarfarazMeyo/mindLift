@@ -8,6 +8,7 @@ import {
   Image,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useStore } from '../../lib/store';
@@ -29,15 +30,21 @@ export default function Login() {
   const updateLoginStreak = useStore((state) => state.updateLoginStreak);
   const [isEmailUnverified, setIsEmailUnverified] = useState(false);
   const [resendEmailLoading, setResendEmailLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setInitialLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const createProfile = async (user: any) => {
-    const { id, email, name, username } = user;
+    const { id, email, user_metadata } = user;
 
     const { data, error } = await supabase.from('profiles').insert({
       id,
-      email,
-      username,
-      name,
+      email: email || '',
+      username: user_metadata?.username || '',
+      name: user_metadata?.name || '',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
@@ -98,29 +105,29 @@ export default function Login() {
 
       if (data?.user) {
         const { user } = data;
+        const { id, email, user_metadata } = user;
 
-        if (await firstLoginStorage('get')) {
-          const { id, email, name, goals }: any = user;
+        // Check if profile exists
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', id)
+          .single();
 
+        if (!profile) {
           await createProfile(user);
           await createAchievements(id);
-
           await sendWelcomeEmail({
-            to: email,
-            name,
-            goals: goals.length > 0 ? goals : undefined,
+            to: email || '',
+            name: user_metadata?.name || '',
+            goals: user_metadata?.goals?.length > 0 ? user_metadata.goals : undefined,
           });
-
-          router.push('/(auth)/questions');
-          await firstLoginStorage('remove');
           await loginEmailStorage('remove');
-
-          return;
-        } else {
-          updateLoginStreak();
-          router.replace('/(app)/(tabs)');
-          return;
         }
+
+        updateLoginStreak();
+        router.replace('/(app)/(tabs)');
+        return;
       } else {
         throw new Error('Something went wrong. Please try again.');
       }
@@ -171,104 +178,122 @@ export default function Login() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        <Image
-          source={require('../../assets/images/mindlift.png')}
-          style={styles.logo}
-        />
-        <Text style={styles.appTitle}>MINDLIFT</Text>
-        <Text style={styles.title}>Welcome</Text>
-        <Text style={styles.subtitle}>
-          Continue your journey to mental wellness
-        </Text>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Email Address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor="#999999"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            editable={!loading}
-            accessibilityLabel="Email input field"
+    <>
+      {initialLoading ? (
+        <View style={styles.loaderContainer}>
+          <Image
+            source={require('../../assets/images/mindlift.png')}
+            style={styles.logo}
           />
-
-          <Text style={styles.inputLabel}>Password</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor="#999999"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={secureTextEntry}
-              editable={!loading}
-              accessibilityLabel="Password input field"
+          <ActivityIndicator
+            size="large"
+            color="#3498db"
+            style={{ marginTop: 20 }}
+          />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.container}>
+            <Image
+              source={require('../../assets/images/mindlift.png')}
+              style={styles.logo}
             />
+            <Text style={styles.appTitle}>MINDLIFT</Text>
+            <Text style={styles.title}>Welcome</Text>
+            <Text style={styles.subtitle}>
+              Continue your journey to mental wellness
+            </Text>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Email Address</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                placeholderTextColor="#999999"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                editable={!loading}
+                accessibilityLabel="Email input field"
+              />
+
+              <Text style={styles.inputLabel}>Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#999999"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={secureTextEntry}
+                  editable={!loading}
+                  accessibilityLabel="Password input field"
+                />
+                <TouchableOpacity
+                  onPress={() => setSecureTextEntry(!secureTextEntry)}
+                  style={styles.eyeButton}
+                >
+                  <Text style={styles.eyeText}>
+                    {secureTextEntry ? (
+                      <AntDesign name="eye" size={24} color="grey" />
+                    ) : (
+                      <Entypo name="eye-with-line" size={24} color="black" />
+                    )}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+            </View>
+
             <TouchableOpacity
-              onPress={() => setSecureTextEntry(!secureTextEntry)}
-              style={styles.eyeButton}
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+              accessibilityLabel="Login button"
             >
-              <Text style={styles.eyeText}>
-                {secureTextEntry ? (
-                  <AntDesign name="eye" size={24} color="grey" />
-                ) : (
-                  <Entypo name="eye-with-line" size={24} color="black" />
-                )}
+              <Text style={styles.buttonText}>
+                {loading ? 'Signing In...' : 'Sign In'}
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.signUpButton, loading && styles.buttonDisabled]}
+              onPress={() => router.push('/signup')}
+              disabled={loading}
+              accessibilityLabel="Create account button"
+            >
+              <Text style={styles.signUpButtonText}>Create New Account</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => router.push('/forgot-password')}
+              disabled={loading}
+              accessibilityLabel="Forgot password button"
+            >
+              <Text style={styles.forgotPasswordText}>
+                Forgot your password?
+              </Text>
+            </TouchableOpacity>
+
+            {isEmailUnverified && (
+              <TouchableOpacity
+                disabled={resendEmailLoading}
+                style={[
+                  styles.button,
+                  { backgroundColor: '#f39c12', marginTop: 10 },
+                ]}
+                onPress={handleResendVerification}
+              >
+                <Text style={styles.buttonText}>Resend Verification Email</Text>
+              </TouchableOpacity>
+            )}
           </View>
-
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
-          accessibilityLabel="Login button"
-        >
-          <Text style={styles.buttonText}>
-            {loading ? 'Signing In...' : 'Sign In'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.signUpButton, loading && styles.buttonDisabled]}
-          onPress={() => router.push('/signup')}
-          disabled={loading}
-          accessibilityLabel="Create account button"
-        >
-          <Text style={styles.signUpButtonText}>Create New Account</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.forgotPassword}
-          onPress={() => router.push('/forgot-password')}
-          disabled={loading}
-          accessibilityLabel="Forgot password button"
-        >
-          <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
-        </TouchableOpacity>
-
-        {isEmailUnverified && (
-          <TouchableOpacity
-            disabled={resendEmailLoading}
-            style={[
-              styles.button,
-              { backgroundColor: '#f39c12', marginTop: 10 },
-            ]}
-            onPress={handleResendVerification}
-          >
-            <Text style={styles.buttonText}>Resend Verification Email</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </ScrollView>
+        </ScrollView>
+      )}
+    </>
   );
 }
 
@@ -390,5 +415,11 @@ const styles = StyleSheet.create({
     color: '#3498db',
     fontSize: 14,
     fontWeight: '500',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
 });

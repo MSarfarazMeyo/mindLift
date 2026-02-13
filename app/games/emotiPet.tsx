@@ -12,13 +12,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { usePet } from '@/contexts/PetContext';
-import PetDisplay from '@/components/PetDisplay';
 import Colors from '@/constants/colors';
 import { MOOD_CONFIG } from '@/constants/petConfig';
 import { MoodType, PetType } from '@/types/pet';
 // Groq API - Free tier with 6000 tokens/minute
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_API_KEY = process.env.GROQ_API_KEY!;
+const GROQ_API_URL = process.env.EXPO_PUBLIC_GROQ_API_URL!;
+const GROQ_API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY!;
 import { useMutation } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -61,10 +60,12 @@ export default function HomeScreen() {
         },
         body: JSON.stringify({
           model: 'llama-3.1-8b-instant',
-          messages: [{
-            role: 'user',
-            content: prompt
-          }],
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
           temperature: 0.7,
           max_tokens: 200,
         }),
@@ -75,7 +76,7 @@ export default function HomeScreen() {
       }
 
       const data = await response.json();
-      return data?.choices?.[0]?.message?.content || 'I\'m here for you! 💜';
+      return data?.choices?.[0]?.message?.content || "I'm here for you! 💜";
     },
   });
 
@@ -156,6 +157,8 @@ export default function HomeScreen() {
       </View>
     );
   }
+
+  console.log('generateAIResponseMutation', generateAIResponseMutation);
 
   return (
     <View style={styles.container}>

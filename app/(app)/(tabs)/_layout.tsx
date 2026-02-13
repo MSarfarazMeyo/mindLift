@@ -17,6 +17,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
+          headerShown: false,
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -26,6 +28,8 @@ export default function TabLayout() {
         name="mood"
         options={{
           title: 'Mood',
+          headerShown: false,
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="heart" size={size} color={color} />
           ),
@@ -35,6 +39,8 @@ export default function TabLayout() {
         name="journal"
         options={{
           title: 'Journal',
+          headerShown: false,
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="book" size={size} color={color} />
           ),
@@ -54,6 +60,8 @@ export default function TabLayout() {
         name="achievements"
         options={{
           title: 'Achievements',
+          headerShown: false,
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="trophy" size={size} color={color} />
           ),
@@ -64,6 +72,8 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
+          headerShown: false,
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings" size={size} color={color} />
           ),

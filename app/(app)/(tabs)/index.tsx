@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '@/lib/supabase';
 import Purchases from 'react-native-purchases';
 import { useRC } from '@/lib/revenuecat';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -81,6 +82,7 @@ const WELLNESS_TIPS = [
 export default function HomeScreen() {
   const store = useStore();
   const ctx = useRC();
+  const insets = useSafeAreaInsets();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -277,7 +279,10 @@ export default function HomeScreen() {
   );
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={{ ...styles.container, paddingTop: insets.top }}
+      showsVerticalScrollIndicator={false}
+    >
       {renderHeader()}
       {renderQuoteCard()}
       {renderQuickActions()}
@@ -321,11 +326,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingTop: 40,
   },
   header: {
     padding: 20,
-    paddingTop: 40,
-    paddingBottom: 30,
   },
   headerContent: {
     flexDirection: 'row',

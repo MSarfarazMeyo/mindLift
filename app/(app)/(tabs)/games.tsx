@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '../../../lib/store';
 import { useMusic } from '@/hooks/useMusic';
 
@@ -28,7 +29,11 @@ type GameId =
   | 'breakout'
   | 'endlessrunner'
   | 'colormatch'
-  | 'birdybounce';
+  | 'birdybounce'
+  | 'pacman'
+  | 'connectfour'
+  | 'snake'
+  | 'shooting';
 
 const games: any[] = [
   {
@@ -199,9 +204,50 @@ const games: any[] = [
     image:
       'https://images.unsplash.com/photo-1444927714506-8492d94b5ba0?w=800&auto=format&fit=crop&q=80',
   },
+  {
+    id: 'pacman',
+    title: 'Pac-Man',
+    description: 'Classic maze game with ghosts',
+    icon: '👻',
+    color: '#FFD700',
+    points: '100-500',
+    image:
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'connectfour',
+    title: 'Connect Four',
+    description: 'Challenge AI in strategic board game',
+    icon: '🔴',
+    color: '#DC2626',
+    points: '75-200',
+    image:
+      'https://images.unsplash.com/photo-1632501641765-e568d28b0015?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'snake',
+    title: 'Snake Game',
+    description: 'Eat food and grow your snake',
+    icon: '🐍',
+    color: '#10B981',
+    points: '80-400',
+    image:
+      'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=800&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'shooting',
+    title: 'Space Assault',
+    description: 'Defend galaxy from alien invaders',
+    icon: '🚀',
+    color: '#00D9FF',
+    points: '150-1000',
+    image:
+      'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800&auto=format&fit=crop&q=80',
+  },
 ];
 
 export default function GamesScreen() {
+  const insets = useSafeAreaInsets();
   const { loadAll, unloadAll } = useMusic();
 
   useEffect(() => {
@@ -216,7 +262,10 @@ export default function GamesScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, { paddingTop: insets.top }]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Wellness Games</Text>
         <Text style={styles.subtitle}>
@@ -294,7 +343,11 @@ export default function GamesScreen() {
               game.id === 'breakout' ||
               game.id === 'endlessrunner' ||
               game.id === 'colormatch' ||
-              game.id === 'birdybounce' ? (
+              game.id === 'birdybounce' ||
+              game.id === 'pacman' ||
+              game.id === 'connectfour' ||
+              game.id === 'snake' ||
+              game.id === 'shooting' ? (
                 <Text style={styles.gameIconText}>{game.icon}</Text>
               ) : (
                 <Ionicons name={game.icon as any} size={24} color="#ffffff" />

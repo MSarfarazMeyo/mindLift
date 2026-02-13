@@ -9,6 +9,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   VictoryLine,
   VictoryChart,
@@ -176,6 +177,7 @@ interface MoodEntry {
 }
 
 export default function MoodScreen() {
+  const insets = useSafeAreaInsets();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedMood, setSelectedMood] = useState<MoodEntry | null>(null);
   const [bounceValue] = useState(new Animated.Value(1));
@@ -183,9 +185,7 @@ export default function MoodScreen() {
   const addMoodEntry = useStore((state) => state.addMoodEntry);
   const stats = useStore((state) => state.getMoodStats());
 
-  console.warn("stats", stats);
-
-
+  console.warn('stats', stats);
 
   const generateWeeklyData = () => {
     const today = new Date();
@@ -332,7 +332,10 @@ export default function MoodScreen() {
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, { paddingTop: insets.top }]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Mood Tracker</Text>
         <Text style={styles.subtitle}>Monitor your emotional well-being</Text>
