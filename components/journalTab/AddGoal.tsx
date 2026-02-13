@@ -65,124 +65,115 @@ export default function AddGoalScreen({
   return (
     <View style={[styles.container]}>
       <StatusBar style="dark" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => setActiveTab('goals')}
+          style={styles.closeButton}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="gray" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>New Goal</Text>
+        <TouchableOpacity
+          onPress={() => setActiveTab('goals')}
+          style={styles.closeButton}
+          testID="close-modal"
+        >
+          <X size={22} color={Colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
         style={styles.flex}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom + 100 },
+        ]}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => setActiveTab('goals')}
-            style={styles.closeButton}
-          >
-            <MaterialIcons name="arrow-back" size={24} color="gray" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>New Goal</Text>
-          <TouchableOpacity
-            onPress={() => setActiveTab('goals')}
-            style={styles.closeButton}
-            testID="close-modal"
-          >
-            <X size={22} color={Colors.textSecondary} />
-          </TouchableOpacity>
+        <Text style={styles.sectionLabel}>What's your goal?</Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="e.g. Read for 30 minutes"
+          placeholderTextColor={Colors.textTertiary}
+          maxLength={50}
+        />
+
+        <Text style={styles.sectionLabel}>Pick an emoji</Text>
+        <View style={styles.emojiGrid}>
+          {GOAL_EMOJIS.map((emoji) => (
+            <TouchableOpacity
+              key={emoji}
+              style={[
+                styles.emojiOption,
+                selectedEmoji === emoji && styles.emojiOptionSelected,
+              ]}
+              onPress={() => {
+                setSelectedEmoji(emoji);
+                if (Platform.OS !== 'web') {
+                  Haptics.selectionAsync();
+                }
+              }}
+            >
+              <Text style={styles.emojiText}>{emoji}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={[
-            styles.content,
-            { paddingBottom: insets.bottom + 24 },
-          ]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.sectionLabel}>What's your goal?</Text>
-          <TextInput
-            style={styles.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="e.g. Read for 30 minutes"
-            placeholderTextColor={Colors.textTertiary}
-            autoFocus={false}
-            maxLength={50}
-            testID="goal-title-input"
-            returnKeyType="done"
-            blurOnSubmit
-          />
-
-          <Text style={styles.sectionLabel}>Pick an emoji</Text>
-          <View style={styles.emojiGrid}>
-            {GOAL_EMOJIS.map((emoji) => (
-              <TouchableOpacity
-                key={emoji}
-                style={[
-                  styles.emojiOption,
-                  selectedEmoji === emoji && styles.emojiOptionSelected,
-                ]}
-                onPress={() => {
-                  setSelectedEmoji(emoji);
-                  if (Platform.OS !== 'web') {
-                    Haptics.selectionAsync();
-                  }
-                }}
-              >
-                <Text style={styles.emojiText}>{emoji}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={styles.sectionLabel}>Point value</Text>
-          <View style={styles.pointsGrid}>
-            {POINT_OPTIONS.map((points) => (
-              <TouchableOpacity
-                key={points}
-                style={[
-                  styles.pointOption,
-                  selectedPoints === points && styles.pointOptionSelected,
-                ]}
-                onPress={() => {
-                  setSelectedPoints(points);
-                  if (Platform.OS !== 'web') {
-                    Haptics.selectionAsync();
-                  }
-                }}
-              >
-                <Text
-                  style={[
-                    styles.pointText,
-                    selectedPoints === points && styles.pointTextSelected,
-                  ]}
-                >
-                  {points}
-                </Text>
-                <Text
-                  style={[
-                    styles.pointSuffix,
-                    selectedPoints === points && styles.pointSuffixSelected,
-                  ]}
-                >
-                  pts
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+        <Text style={styles.sectionLabel}>Point value</Text>
+        <View style={styles.pointsGrid}>
+          {POINT_OPTIONS.map((points) => (
             <TouchableOpacity
-              onPress={handleSave}
+              key={points}
               style={[
-                styles.saveButton,
-                !title.trim() && styles.saveButtonDisabled,
+                styles.pointOption,
+                selectedPoints === points && styles.pointOptionSelected,
               ]}
-              disabled={!title.trim()}
-              activeOpacity={0.8}
-              testID="save-goal-button"
+              onPress={() => {
+                setSelectedPoints(points);
+                if (Platform.OS !== 'web') {
+                  Haptics.selectionAsync();
+                }
+              }}
             >
-              <Check size={20} color={Colors.background} strokeWidth={3} />
-              <Text style={styles.saveButtonText}>Add Goal</Text>
+              <Text
+                style={[
+                  styles.pointText,
+                  selectedPoints === points && styles.pointTextSelected,
+                ]}
+              >
+                {points}
+              </Text>
+              <Text
+                style={[
+                  styles.pointSuffix,
+                  selectedPoints === points && styles.pointSuffixSelected,
+                ]}
+              >
+                pts
+              </Text>
             </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          ))}
+        </View>
+
+        <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+          <TouchableOpacity
+            onPress={handleSave}
+            style={[
+              styles.saveButton,
+              !title.trim() && styles.saveButtonDisabled,
+            ]}
+            disabled={!title.trim()}
+            activeOpacity={0.8}
+            testID="save-goal-button"
+          >
+            <Check size={20} color={Colors.background} strokeWidth={3} />
+            <Text style={styles.saveButtonText}>Add Goal</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </ScrollView>
     </View>
   );
 }
@@ -308,6 +299,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 100,
   },
   saveButtonDisabled: {
     opacity: 0.4,
