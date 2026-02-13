@@ -65,8 +65,10 @@ export default function SettingsScreen() {
     const loadSettings = async () => {
       const savedDailyReminders = await AsyncStorage.getItem('dailyReminders');
       const savedWeeklyReports = await AsyncStorage.getItem('weeklyReports');
-      const savedNotificationsEnabled = await AsyncStorage.getItem('notificationsEnabled');
-      
+      const savedNotificationsEnabled = await AsyncStorage.getItem(
+        'notificationsEnabled',
+      );
+
       if (savedDailyReminders !== null) {
         setDailyReminders(savedDailyReminders === 'true');
       }
@@ -705,6 +707,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
+    marginBottom: 100,
   },
 
   logoutButtonDisabled: {

@@ -51,6 +51,7 @@ import {
   getAvailableColumns,
 } from '@/utils/connect-four-logic';
 import { getAIMove } from '@/utils/connect-four-ai';
+import { MaterialIcons } from '@expo/vector-icons';
 const Colors = connectFourColors;
 const SCORE_KEY = 'connect4_scores';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -492,6 +493,13 @@ export default function ConnectFourScreen() {
         ]}
       >
         <View style={styles.titleRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.closeButton}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="gray" />
+          </TouchableOpacity>
+
           <Text style={styles.title}>Connect Four</Text>
           <View style={styles.headerButtons}>
             <TouchableOpacity

@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 3,
+    marginBottom: 100,
   },
   leaderboardButtonText: {
     color: '#fff',
@@ -143,6 +144,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
     padding: 20,
+    marginBottom: 120,
   },
   modalHeader: {
     marginTop: 36,

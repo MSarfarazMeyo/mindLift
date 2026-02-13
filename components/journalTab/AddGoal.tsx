@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { useGoals } from '@/contexts/GoalsContext';
 import { GOAL_EMOJIS } from '@/constants/emojis';
 import { goalTrackerColors } from '@/constants/colors';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 const Colors = goalTrackerColors;
 
@@ -72,12 +73,17 @@ export default function AddGoalScreen({
           <TouchableOpacity
             onPress={() => setActiveTab('goals')}
             style={styles.closeButton}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="gray" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>New Goal</Text>
+          <TouchableOpacity
+            onPress={() => setActiveTab('goals')}
+            style={styles.closeButton}
             testID="close-modal"
           >
             <X size={22} color={Colors.textSecondary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>New Goal</Text>
-          <View style={styles.closeButton} />
         </View>
 
         <ScrollView
@@ -96,9 +102,11 @@ export default function AddGoalScreen({
             onChangeText={setTitle}
             placeholder="e.g. Read for 30 minutes"
             placeholderTextColor={Colors.textTertiary}
-            autoFocus
+            autoFocus={false}
             maxLength={50}
             testID="goal-title-input"
+            returnKeyType="done"
+            blurOnSubmit
           />
 
           <Text style={styles.sectionLabel}>Pick an emoji</Text>

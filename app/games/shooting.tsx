@@ -27,6 +27,8 @@ import type {
   EnemyLaser,
   Star,
 } from '@/types/shootingGame';
+import { MaterialIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -720,6 +722,12 @@ export default function GameScreen() {
   if (!isStarted) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.closeButton}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="gray" />
+        </TouchableOpacity>
         <View style={styles.menuContainer}>
           <Text style={styles.title}>SPACE ASSAULT</Text>
           <Text style={styles.subtitle}>
@@ -746,6 +754,12 @@ export default function GameScreen() {
     }
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.closeButton}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="gray" />
+        </TouchableOpacity>
         <View style={styles.gameOverContainer}>
           <Text style={styles.gameOverTitle}>
             {gameState.victory ? 'VICTORY!' : 'GAME OVER'}
@@ -781,6 +795,12 @@ export default function GameScreen() {
       ))}
       <View style={[styles.ui, { top: insets.top + 10 }]}>
         <View style={styles.statsRow}>
+          <TouchableOpacity
+            onPress={() => setIsStarted(false)}
+            style={styles.closeButton2}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="gray" />
+          </TouchableOpacity>
           <Text style={styles.scoreText}>SCORE: {gameState.score}</Text>
           <Text style={styles.waveText}>WAVE: {gameState.wave}</Text>
         </View>
@@ -1105,6 +1125,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
+    paddingRight: 12,
   },
   scoreText: {
     fontSize: 18,
@@ -1282,5 +1303,28 @@ const styles = StyleSheet.create({
     textShadowColor: '#000',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+  },
+
+  closeButton: {
+    position: 'absolute',
+    top: 48,
+    left: 24,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1a1f3a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
+  },
+
+  closeButton2: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1a1f3a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
   },
 });

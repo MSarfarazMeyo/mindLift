@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
-import { View, Text, ActivityIndicator, StyleSheet, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,7 +24,11 @@ import { PetProvider } from '@/contexts/PetContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { LeaderboardProvider } from '@/contexts/LeaderboardContext';
 import { GoalsProvider } from '@/contexts/GoalsContext';
-import { scheduleDailyReminder, scheduleWeeklyReport } from '@/lib/notifications';
+import {
+  scheduleDailyReminder,
+  scheduleWeeklyReport,
+} from '@/lib/notifications';
+import { StatusBar } from 'expo-status-bar';
 
 if (__DEV__) {
   require('../ReactotronConfig');
@@ -280,6 +290,7 @@ export default function RootLayout() {
                     />
                   </Stack>
                   <Toast />
+                  <StatusBar style="dark" />
                 </GestureHandlerRootView>
               </GoalsProvider>
             </LeaderboardProvider>

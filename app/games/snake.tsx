@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { addGamePoints } from '@/lib/gamePoints';
+import { MaterialIcons } from '@expo/vector-icons';
+import colors from '@/constants/colors';
 
 const GRID_SIZE = 20;
 const CELL_SIZE = Dimensions.get('window').width / GRID_SIZE;
@@ -266,6 +268,15 @@ export default function SnakeGame() {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        onPress={() =>
+          isGameOver || isPaused ? router.back() : setIsPaused(true)
+        }
+        style={styles.closeButton}
+      >
+        <MaterialIcons name="arrow-back" size={24} color="gray" />
+      </TouchableOpacity>
+
       <LinearGradient
         colors={['#0f0c29', '#302b63', '#24243e']}
         style={StyleSheet.absoluteFillObject}
@@ -595,5 +606,17 @@ const styles = StyleSheet.create({
     fontWeight: '800' as const,
     color: '#ffffff',
     letterSpacing: 1,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 48,
+    left: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1a1f3a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
   },
 });
