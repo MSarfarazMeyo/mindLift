@@ -205,7 +205,7 @@ const WeeklyReportTab = () => {
       totalEntries: weeklyEntries.length,
       journalEntries: journalOnlyEntries.length,
       questionsCompleted: questionEntries.length,
-      goalsCompleted: goalEntries.length,
+      goalsCompleted: weeklyGoalsCount,
       averageWellnessScore,
       moodTrend,
       sleepAverage,
@@ -450,14 +450,14 @@ const WeeklyReportTab = () => {
             style={[
               styles.progressFill,
               {
-                width: `${Math.min((weeklyStats.goalsCompleted / 14) * 100, 100)}%`,
+                width: `${Math.min((weeklyGoalsCount / 14) * 100, 100)}%`,
               },
             ]}
           />
         </View>
         <Text style={styles.progressText}>
-          {weeklyStats.goalsCompleted} goals completed this week
-          {weeklyStats.goalsCompleted >= 14 && ' 🎯 Amazing!'}
+          {weeklyGoalsCount} goals completed this week
+          {weeklyGoalsCount >= 14 && ' 🎯 Amazing!'}
         </Text>
       </View>
 
@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     borderLeftWidth: 4,
     borderLeftColor: '#3B82F6',
-    marginBottom: 30,
+    marginBottom: 60,
   },
   encouragementTitle: {
     fontSize: 18,

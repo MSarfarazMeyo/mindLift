@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
   },
   tipsContainer: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 70,
   },
   tipsScroll: {
     paddingRight: 20,
