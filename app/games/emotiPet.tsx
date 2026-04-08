@@ -16,11 +16,10 @@ import Colors from '@/constants/colors';
 import { MOOD_CONFIG } from '@/constants/petConfig';
 import { MoodType, PetType } from '@/types/pet';
 // Groq API - Free tier with 6000 tokens/minute
-const GROQ_API_URL = process.env.EXPO_PUBLIC_GROQ_API_URL!;
-const GROQ_API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY!;
 import { useMutation } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { GROQ_API_KEY, GROQ_API_URL } from '@/constants/ApiUrl';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -526,10 +525,10 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
   backButton: {
     padding: 8,
+    paddingHorizontal: 0,
   },
   greeting: {
     fontSize: 18,

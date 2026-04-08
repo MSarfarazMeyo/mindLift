@@ -2,7 +2,7 @@ export default {
   expo: {
     name: 'MindLift',
     slug: 'Mind-Lift',
-    version: '1.4.0',
+    version: '1.4.2',
     orientation: 'portrait',
     icon: './assets/images/FullLogo-5.jpg',
     scheme: 'mindlift',
@@ -27,7 +27,7 @@ export default {
       supportsTablet: true,
       usesAppleSignIn: true,
       bundleIdentifier: 'com.mindlift.app',
-      buildNumber: '40',
+      buildNumber: '42',
       infoPlist: {
         NSPhotoLibraryUsageDescription:
           'Your permission allows us to access your media gallery so you can upload images from your photo library to your wellness journal entries.',
@@ -36,7 +36,7 @@ export default {
     android: {
       package: 'com.gerald.mindlift',
 
-      versionCode: 13,
+      versionCode: 42,
       adaptiveIcon: {
         foregroundImage: './assets/notification_icon.png',
         backgroundColor: '#FFFFFF',

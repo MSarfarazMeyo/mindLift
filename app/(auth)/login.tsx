@@ -120,7 +120,10 @@ export default function Login() {
           await sendWelcomeEmail({
             to: email || '',
             name: user_metadata?.name || '',
-            goals: user_metadata?.goals?.length > 0 ? user_metadata.goals : undefined,
+            goals:
+              user_metadata?.goals?.length > 0
+                ? user_metadata.goals
+                : undefined,
           });
           await loginEmailStorage('remove');
         }
@@ -353,6 +356,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0e0e0',
     fontSize: 16,
+    color: '#000',
   },
   button: {
     backgroundColor: '#3498db',

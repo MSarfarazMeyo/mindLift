@@ -9,8 +9,11 @@ import {
 type SubscriptionStatus = 'active' | 'canceled' | 'expired' | 'none';
 type SubscriptionType = 'trial' | 'yearly' | 'lifetime' | null;
 
+const LIFETIME_PRODUCT_IDS = ['lifetime_minfLift_plan_id', 'lifetime_minflift_plan_id'];
+
 const productIdToSubscriptionType: Record<string, SubscriptionType> = {
   lifetime_minfLift_plan_id: 'lifetime',
+  lifetime_minflift_plan_id: 'lifetime',
   yearly_mindlift_plan_id: 'yearly',
   weekly_mindlift_plan_with_three_day_trial_id: 'trial',
 };
@@ -89,8 +92,8 @@ export const RCProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
     // Check if user owns lifetime (or other non-subscription) product
-    const ownsLifetime = customerInfo.allPurchasedProductIdentifiers.includes(
-      'lifetime_minfLift_plan_id',
+    const ownsLifetime = customerInfo.allPurchasedProductIdentifiers.some(
+      (id) => LIFETIME_PRODUCT_IDS.includes(id),
     );
     if (ownsLifetime) {
       return {

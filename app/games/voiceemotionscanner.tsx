@@ -23,11 +23,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation } from '@tanstack/react-query';
-// Groq API - Free tier with 6000 tokens/minute
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_API_KEY = process.env.GROQ_API_KEY!;
+
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { GROQ_API_KEY, GROQ_API_URL } from '@/constants/ApiUrl';
 
 const { width } = Dimensions.get('window');
 
@@ -192,10 +191,12 @@ Provide analysis in this EXACT JSON format:
         },
         body: JSON.stringify({
           model: 'llama-3.1-8b-instant',
-          messages: [{
-            role: 'user',
-            content: prompt
-          }],
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
           temperature: 0.3,
           max_tokens: 800,
         }),

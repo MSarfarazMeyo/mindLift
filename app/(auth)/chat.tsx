@@ -18,9 +18,8 @@ import Colors from '@/constants/colors';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../lib/store';
+import { GROQ_API_KEY, GROQ_API_URL } from '@/constants/ApiUrl';
 // Groq API - Free tier with 6000 tokens/minute
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_API_KEY = process.env.GROQ_API_KEY!; // Get from console.groq.com
 
 type Role = 'user' | 'assistant';
 
